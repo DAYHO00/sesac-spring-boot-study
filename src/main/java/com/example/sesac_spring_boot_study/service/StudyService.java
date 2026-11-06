@@ -133,14 +133,17 @@ public class StudyService {
         return "변경 성공: 현재 정원=" + capacity  + ", 승격자=" + (promoted.isEmpty() ? "없음" : String.join(", ", promoted));
     }
 
-    public String getMembers(){
+    public String getMembers() {
 
-        if(memberList.isEmpty()){
+        if (memberList.isEmpty()) {
             return "참가자가 없습니다";
         }
 
         StringBuilder result = new StringBuilder();
-        result.append("현재 정원: ").append(capacity).append("\n");
+
+        result.append("현재 정원: ")
+                .append(capacity)
+                .append("\n\n");
 
         for (StudyMember member : memberList) {
             result.append("id=").append(member.getId())
