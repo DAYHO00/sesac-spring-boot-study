@@ -10,103 +10,126 @@ import java.util.List;
 public class StudyService {
 
     private final List<StudyMember> memberList = new ArrayList<>();
-
     private long nextId = 1L;
     private int capacity = 2;
 
+    public String register(String name) {
 
-    public String register(String name){
+        if (name == null || name.trim().isEmpty()) {
+            return "신청 실패: 입력 오류.";
+        }
 
         String realName = name.trim();
 
-        if(realName==null || realName.isEmpty()){
-            return "신청 실패 : 입력 오류";
+        if (isDuplicateName(realName)) {
+            return "신청 실패: 중복 이름.";
         }
 
-        for(StudyMember member : memberList){
-            if(member.getName().equals(realName)){
-                return "신청 실패 : 중복 이름";
-            }
-        }
+        boolean confirm = getConfirmedCount() < capacity;
 
-        long count = memberList.stream()
-                .filter(StudyMember::isConfirm)
-                .count();
-
-        boolean confirm = count < capacity;
-
-        StudyMember member= new StudyMember(nextId++,realName, confirm);
+        StudyMember member = new StudyMember(nextId++, realName, confirm);
         memberList.add(member);
 
-        // 3. 신청 성공
-        return "id= " + member.getId() + ", 이름= " + member.getName() + ", 상태= " + (confirm ? "확정" : "대기");
+        return "id = " + member.getId() + ", 이름 = " + member.getName() + ", 상태 = " + (confirm ? "확정" : "대기");
     }
 
-    public String cancel(String memberId){
-
-        if (memberId == null || memberId.trim().isEmpty()) {
-            return "취소 실패: ID 입력";
-        }
-
-        long id;
-        try {
-            id = Long.parseLong(memberId.trim());
-        } catch (NumberFormatException e) {
-            return "취소 실패: ID 숫자 입력";
-        }
-
-        StudyMember targetMember = null;
+    private boolean isDuplicateName(String name) {
 
         for (StudyMember member : memberList) {
-            if (member.getId().equals(id)) {
-                targetMember = member;
-                break;
+            if (member.getName().equals(name)) {
+                return true;
             }
         }
 
-        if (targetMember == null) {
-            return "취소 실패: 존재하지 않는 ID";
+        return false;
+    }
+
+    private long getConfirmedCount() {
+        return memberList.stream().filter(StudyMember::isConfirm).count();
+    }
+
+    public String cancel(String memberId) {
+
+        Long id = parseId(memberId);
+
+        if (id == null) {
+            return "취소 실패: ID는 숫자로 입력.";
         }
 
-        boolean confirm = targetMember.isConfirm();
+        StudyMember targetMember = findMemberById(id);
+
+        if (targetMember == null) {
+            return "취소 실패: 존재하지 않는 ID.";
+        }
+
         memberList.remove(targetMember);
 
         String result = "취소 성공: " + targetMember.getName();
 
-        if (confirm) {
-            for (StudyMember member : memberList) {
-                if (!member.isConfirm()) {
-                    member.setConfirmed(true);
-                    result += ", 대기자 승격: " + member.getName();
-                    break;
-                }
+        if (targetMember.isConfirm()) {
+            String promoted = promoteWaitingMembers(1);
+
+            if (!promoted.isEmpty()) {
+                result += ", 대기자 승격: " + promoted;
             }
         }
 
         return result;
     }
 
-    public String changeCapacity(String value){
+    private Long parseId(String memberId) {
 
-        if (value == null || value.trim().isEmpty()) {
-            return "변경 실패: 정원을 입력. 현재 정원=" + value;
+        if (memberId == null || memberId.trim().isEmpty()) {
+            return null;
         }
-
-        int newCapacity;
 
         try {
-            newCapacity = Integer.parseInt(value.trim());
+            return Long.parseLong(memberId.trim());
         } catch (NumberFormatException e) {
-            return "변경 실패: 정원은 정수. 현재 정원=" + value;
+            return null;
+        }
+    }
+
+    private StudyMember findMemberById(Long id) {
+
+        for (StudyMember member : memberList) {
+            if (member.getId().equals(id)) {
+                return member;
+            }
         }
 
-        if (newCapacity < 1 || newCapacity > 10) {
-            return "변경 실패: 정원은 1~10명. 현재 정원=" + value;
+        return null;
+    }
+
+    private String promoteWaitingMembers(int available) {
+
+        List<String> promoted = new ArrayList<>();
+
+        for (StudyMember member : memberList) {
+
+            if (available == 0) {
+                break;
+            }
+
+            if (!member.isConfirm()) {
+                member.setConfirmed(true);
+                promoted.add(member.getName());
+                available--;
+            }
         }
 
-        long confirmedCount = memberList.stream()
-                .filter(StudyMember::isConfirm)
-                .count();
+        return String.join(", ", promoted);
+    }
+
+    public String changeCapacity(String value) {
+
+        Integer newCapacity = parseCapacity(value);
+
+        if (newCapacity == null) {
+            return "변경 실패: 정원은 1~10 사이의 정수. 현재 정원=" + capacity;
+        }
+
+        long confirmedCount = getConfirmedCount();
 
         if (newCapacity < confirmedCount) {
             return "변경 실패: 현재 확정 인원보다 작게 설정 불가. 현재 정원=" + capacity;
@@ -114,47 +137,50 @@ public class StudyService {
 
         capacity = newCapacity;
 
-        int avail = capacity - (int) confirmedCount;
-        List<String> promoted = new ArrayList<>();
+        int available = capacity - (int) confirmedCount;
+        String promoted = promoteWaitingMembers(available);
 
-        for (StudyMember member : memberList) {
+        return "변경 성공: 현재 정원=" + capacity + ", 승격자=" + (promoted.isEmpty() ? "없음" : promoted);
+    }
 
-            if (avail == 0) {
-                break;
-            }
+    private Integer parseCapacity(String value) {
 
-            if (!member.isConfirm()) {
-                member.setConfirmed(true);
-                promoted.add(member.getName());
-                avail--;
-            }
+        if (value == null || value.trim().isEmpty()) {
+            return null;
         }
 
-        return "변경 성공: 현재 정원=" + capacity  + ", 승격자=" + (promoted.isEmpty() ? "없음" : String.join(", ", promoted));
+        try {
+            int number = Integer.parseInt(value.trim());
+
+            if (number < 1 || number > 10) {
+                return null;
+            }
+            return number;
+
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     public String getMembers() {
 
         if (memberList.isEmpty()) {
-            return "참가자가 없습니다";
+            return "참가자 없음.";
         }
 
         StringBuilder result = new StringBuilder();
 
-        result.append("현재 정원: ")
-                .append(capacity)
-                .append("\n\n");
+        result.append("현재 정원: ").append(capacity).append("\n\n");
 
         for (StudyMember member : memberList) {
-            result.append("id=").append(member.getId())
-                    .append(", 이름=").append(member.getName())
-                    .append(", 상태=")
-                    .append(member.isConfirm() ? "확정" : "대기")
-                    .append("\n");
+            result.append(formatMember(member)).append("\n");
         }
 
         return result.toString();
     }
 
+    private String formatMember(StudyMember member) {
 
+        return "id=" + member.getId() + ", 이름=" + member.getName() + ", 상태=" + (member.isConfirm() ? "확정" : "대기");
+    }
 }
