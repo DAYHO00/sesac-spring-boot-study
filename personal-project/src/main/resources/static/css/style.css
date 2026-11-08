@@ -1,0 +1,179 @@
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: #f5f3eb;
+    color: #28352a;
+    font-family: "Malgun Gothic", Arial, sans-serif;
+}
+
+/* 헤더 */
+header {
+    background: #344b38;
+    color: white;
+    padding: 28px 20px;
+    text-align: center;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 32px;
+}
+
+header p {
+    margin-bottom: 0;
+    color: #dce5d7;
+}
+
+/* 메인 */
+main {
+    max-width: 900px;
+    margin: 35px auto;
+    padding: 0 20px;
+}
+
+/* 카드 */
+.card {
+    background: white;
+    border-radius: 14px;
+    padding: 25px;
+    margin-bottom: 22px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.05);
+}
+
+h2 {
+    font-size: 20px;
+    margin-top: 0;
+    margin-bottom: 20px;
+}
+
+/* 입력 폼 */
+.form-row {
+    display: flex;
+    gap: 10px;
+}
+
+input {
+    width: 100%;
+    min-width: 0;
+    padding: 13px;
+    border: 1px solid #d2d8d0;
+    border-radius: 8px;
+    font-size: 15px;
+}
+
+input:focus {
+    outline: 2px solid #789578;
+    outline-offset: 1px;
+}
+
+/* 버튼 */
+button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    background: #466449;
+    color: white;
+    font-size: 14px;
+    font-weight: bold;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+button:hover {
+    background: #2e4632;
+}
+
+/* 위시리스트 */
+.item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 15px 5px;
+    border-bottom: 1px solid #edf0eb;
+}
+
+.item:last-child {
+    border-bottom: none;
+}
+
+.item-name {
+    font-weight: bold;
+}
+
+.item-id {
+    color: #899389;
+    font-size: 12px;
+    margin-right: 10px;
+}
+
+.item-price {
+    color: #466449;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+/* 빈 목록 */
+.empty {
+    color: #929992;
+    text-align: center;
+    padding: 25px 0;
+}
+
+/* 예산 추천 */
+.recommend-list {
+    margin-top: 20px;
+}
+
+.recommend-item {
+    background: #edf3e9;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.recommend-item strong {
+    white-space: nowrap;
+}
+
+/* 메시지 */
+.message {
+    margin-top: 12px;
+    font-size: 14px;
+    color: #466449;
+}
+
+.message:empty {
+    display: none;
+}
+
+.error {
+    color: #c0392b;
+}
+
+/* 푸터 */
+footer {
+    text-align: center;
+    color: #929992;
+    padding: 20px;
+    font-size: 13px;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 600px) {
+    .form-row {
+        flex-direction: column;
+    }
+
+    .item,
+    .recommend-item {
+        align-items: flex-start;
+    }
+}
