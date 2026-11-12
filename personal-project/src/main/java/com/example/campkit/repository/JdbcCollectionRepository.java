@@ -109,4 +109,9 @@ public class JdbcCollectionRepository implements CollectionRepository {
                 .stream()
                 .findFirst();
     }
+    @Override
+    public void delete(Long id) {
+        String sql = "DELETE FROM collection_items WHERE id = ?";
+        jdbcTemplate.update(sql, id);
+    }
 }

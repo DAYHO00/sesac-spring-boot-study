@@ -20,12 +20,9 @@ public class CollectionController {
     }
 
     @PostMapping
-    public ResponseEntity<CollectionItem> register(
-            @RequestParam String name,
-            @RequestParam long price) {
+    public ResponseEntity<CollectionItem> register(@RequestParam String name, @RequestParam long price) {
 
         CollectionItem item = service.register(name, price);
-
         return ResponseEntity
                 .created(URI.create("/api/items/" + item.getId()))
                 .body(item);
@@ -47,13 +44,17 @@ public class CollectionController {
     }
 
     @PostMapping("/import/{externalId}")
-    public ResponseEntity<CollectionItem> importExternal(
-            @PathVariable long externalId) {
+    public ResponseEntity<CollectionItem> importExternal(@PathVariable long externalId) {
 
         CollectionItem item = service.importExternal(externalId);
-
         return ResponseEntity
                 .created(URI.create("/api/items/" + item.getId()))
                 .body(item);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        service.delete(id);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -16,9 +16,7 @@ public class CollectionItem {
     }
 
     // 외부 상품 등록
-    public CollectionItem(Long id, String name, long price,
-                          SourceType sourceType, Long externalId,
-                          Integer stock) {
+    public CollectionItem(Long id, String name, long price, SourceType sourceType, Long externalId, Integer stock) {
 
         if (name == null || name.trim().isEmpty()) {
             throw new IllegalArgumentException("장비 이름은 비어 있을 수 없습니다.");
@@ -32,9 +30,7 @@ public class CollectionItem {
             throw new IllegalArgumentException("상품 출처가 필요합니다.");
         }
 
-        if (sourceType == SourceType.DUMMYJSON &&
-                (externalId == null || externalId <= 0 ||
-                        stock == null || stock < 0)) {
+        if (sourceType == SourceType.DUMMYJSON && (externalId == null || externalId <= 0 || stock == null || stock < 0)) {
             throw new IllegalArgumentException("외부 상품 정보가 올바르지 않습니다.");
         }
 

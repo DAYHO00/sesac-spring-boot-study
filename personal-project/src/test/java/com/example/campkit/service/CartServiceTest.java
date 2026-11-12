@@ -4,32 +4,128 @@ package com.example.campkit.service;
 import com.example.campkit.domain.*;
 import com.example.campkit.exception.*;
 import com.example.campkit.external.*;
-
-import com.example.campkit.repository.original.MemoryCartRepository;
-import com.example.campkit.repository.original.MemoryCollectionRepository;
+import com.example.campkit.repository.CartRepository;
+import com.example.campkit.repository.CollectionRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class CartServiceTest {
 
-    // 외부 API Mock 객체
-    ExternalProductClient client = mock(ExternalProductClient.class);
+    private ExternalProductClient client;
+    private CollectionRepository collectionRepository;
+    private CartRepository cartRepository;
 
-    // 위시리스트 서비스
-    CollectionService collections = new CollectionService(
-            new MemoryCollectionRepository(),
-            new ExternalProductService(client)
-    );
+    private CollectionService collections;
+    private CartService cart;
 
-    // 장바구니 서비스
-    CartService cart = new CartService(
-            new MemoryCartRepository(),
-            collections
-    );
+    private final Map<Long, CollectionItem> collectionItems =
+            new LinkedHashMap<>();
+
+    private final Map<Long, CartItem> cartItems =
+            new LinkedHashMap<>();
+
+    @BeforeEach
+    void setUp() {
+        collectionItems.clear();
+        cartItems.clear();
+
+        client = mock(ExternalProductClient.class);
+        collectionRepository = mock(CollectionRepository.class);
+        cartRepository = mock(CartRepository.class);
+
+        long[] collectionId = {1L};
+        long[] cartId = {1L};
+
+        // 캠핑 장비 저장
+        when(collectionRepository.save(any(CollectionItem.class)))
+                .thenAnswer(invocation -> {
+                    CollectionItem item = invocation.getArgument(0);
+                    CollectionItem saved = item.withId(collectionId[0]++);
+                    collectionItems.put(saved.getId(), saved);
+                    return saved;
+                });
+
+        // 캠핑 장비 ID 조회
+        when(collectionRepository.findById(anyLong()))
+                .thenAnswer(invocation -> {
+                    Long id = invocation.getArgument(0);
+                    return Optional.ofNullable(collectionItems.get(id));
+                });
+
+        // 외부 상품 중복 조회
+        when(collectionRepository.findByExternalId(anyLong()))
+                .thenAnswer(invocation -> {
+                    Long externalId = invocation.getArgument(0);
+
+                    return collectionItems.values().stream()
+                            .filter(item -> item.getSourceType() == SourceType.DUMMYJSON)
+                            .filter(item -> Objects.equals(
+                                    item.getExternalId(), externalId))
+                            .findFirst();
+                });
+
+        // 장바구니 저장
+        when(cartRepository.saveNew(any(CartItem.class)))
+                .thenAnswer(invocation -> {
+                    CartItem item = invocation.getArgument(0);
+                    CartItem saved = item.withId(cartId[0]++);
+                    cartItems.put(saved.getId(), saved);
+                    return saved;
+                });
+
+        // 장바구니 전체 조회
+        when(cartRepository.findAll())
+                .thenAnswer(invocation ->
+                        new ArrayList<>(cartItems.values()));
+
+        // 장바구니 ID 조회
+        when(cartRepository.findById(anyLong()))
+                .thenAnswer(invocation -> {
+                    Long id = invocation.getArgument(0);
+                    return Optional.ofNullable(cartItems.get(id));
+                });
+
+        // 동일 상품 조회
+        when(cartRepository.findByCollectionItemId(anyLong()))
+                .thenAnswer(invocation -> {
+                    Long id = invocation.getArgument(0);
+
+                    return cartItems.values().stream()
+                            .filter(item -> item.getCollectionItemId() == id)
+                            .findFirst();
+                });
+
+        // 수량 수정
+        doAnswer(invocation -> {
+            CartItem item = invocation.getArgument(0);
+            cartItems.put(item.getId(), item);
+            return null;
+        }).when(cartRepository).replace(any(CartItem.class));
+
+        // 장바구니 삭제
+        doAnswer(invocation -> {
+            Long id = invocation.getArgument(0);
+            cartItems.remove(id);
+            return null;
+        }).when(cartRepository).delete(anyLong());
+
+        collections = new CollectionService(
+                collectionRepository,
+                new ExternalProductService(client)
+        );
+
+        cart = new CartService(
+                cartRepository,
+                collections
+        );
+    }
 
     @Test
     void 동일상품_수량합산() {
@@ -38,7 +134,6 @@ class CartServiceTest {
         cart.add(id, 2);
         cart.add(id, 1);
 
-        // 동일 상품은 한 항목으로 관리하며 수량 합산
         assertEquals(1, cart.findAll().size());
         assertEquals(3, cart.findAll().get(0).getQuantity());
     }
@@ -49,20 +144,16 @@ class CartServiceTest {
 
         cart.add(id, 3);
 
-        // 합산 수량 6개는 최대 수량 5개 초과
         assertThrows(
                 ConflictException.class,
                 () -> cart.add(id, 3)
         );
 
-        // 실패 이후 기존 수량 유지
         assertEquals(3, cart.findAll().get(0).getQuantity());
     }
 
     @Test
     void 품절상품_등록방지() {
-
-        // 재고가 0인 외부 상품 응답 설정
         when(client.findById(7)).thenReturn(
                 new DummyJsonProduct(
                         7L,
@@ -76,13 +167,11 @@ class CartServiceTest {
 
         CollectionItem item = collections.importExternal(7);
 
-        // 품절 상품 장바구니 추가 방지
         assertThrows(
                 ConflictException.class,
                 () -> cart.add(item.getId(), 1)
         );
 
-        // 실패 시 장바구니 데이터 유지
         assertTrue(cart.findAll().isEmpty());
     }
 
@@ -92,23 +181,14 @@ class CartServiceTest {
 
         cart.add(id, 1);
 
-        // 쿠폰 없음: 110,000원
-        assertEquals(
-                110000,
-                cart.preview("NONE").finalAmount()
-        );
+        assertEquals(110000,
+                cart.preview("NONE").finalAmount());
 
-        // 10% 할인 + 배송비: 104,000원
-        assertEquals(
-                104000,
-                cart.preview("PERCENT10").finalAmount()
-        );
+        assertEquals(104000,
+                cart.preview("PERCENT10").finalAmount());
 
-        // 15,000원 할인 + 배송비: 100,000원
-        assertEquals(
-                100000,
-                cart.preview("FIXED15000").finalAmount()
-        );
+        assertEquals(100000,
+                cart.preview("FIXED15000").finalAmount());
     }
 
     @Test
@@ -117,7 +197,6 @@ class CartServiceTest {
 
         cart.add(id, 1);
 
-        // 10만원 미만은 고정 할인 쿠폰 사용 불가
         assertThrows(
                 IllegalArgumentException.class,
                 () -> cart.preview("FIXED15000")
@@ -130,11 +209,8 @@ class CartServiceTest {
 
         cart.add(id, 1);
 
-        // 10%는 25,000원이지만 최대 20,000원 할인
-        assertEquals(
-                20000,
-                cart.preview("PERCENT10").discount()
-        );
+        assertEquals(20000,
+                cart.preview("PERCENT10").discount());
     }
 
     @Test
@@ -145,7 +221,6 @@ class CartServiceTest {
 
         cart.delete(item.getId());
 
-        // 삭제 후 장바구니가 비어 있는지 확인
         assertTrue(cart.findAll().isEmpty());
     }
 }

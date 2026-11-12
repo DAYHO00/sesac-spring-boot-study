@@ -16,19 +16,12 @@ public class ExternalProductController {
     }
 
     @GetMapping
-    public DummyJsonPage list(
-            @RequestParam(defaultValue = "10") int limit,
-            @RequestParam(defaultValue = "0") int skip) {
-
+    public DummyJsonPage list(@RequestParam(defaultValue = "10") int limit, @RequestParam(defaultValue = "0") int skip) {
         return service.list(limit, skip);
     }
 
     @GetMapping("/search")
-    public DummyJsonPage search(
-            @RequestParam String q,
-            @RequestParam(defaultValue = "10") int limit,
-            @RequestParam(defaultValue = "0") int skip) {
-
+    public DummyJsonPage search(@RequestParam String q, @RequestParam(defaultValue = "10") int limit, @RequestParam(defaultValue = "0") int skip) {
         return service.search(q, limit, skip);
     }
 

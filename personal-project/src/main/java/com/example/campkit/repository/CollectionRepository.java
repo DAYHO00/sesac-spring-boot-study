@@ -7,6 +7,8 @@ import java.util.Optional;
 
 public interface CollectionRepository {
 
+    void delete(Long id);
+
     CollectionItem save(CollectionItem item);
 
     List<CollectionItem> findAll();

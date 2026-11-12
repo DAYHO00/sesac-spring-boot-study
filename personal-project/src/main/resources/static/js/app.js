@@ -117,6 +117,7 @@ $("registerForm").addEventListener("submit", async event => {
 });
 
 // 2. 기존 위시리스트 조회
+
 async function loadItems() {
     const target = $("itemList");
 
@@ -134,18 +135,54 @@ async function loadItems() {
                 ? `외부 상품 #${item.externalId}`
                 : "수동 등록";
 
-            target.append(createRow(
+            const row = createRow(
                 item.name,
                 `#${item.id} · ${source}`,
                 item.price,
                 "장바구니 담기",
                 () => addCart(item.id)
-            ));
+            );
+
+            // 위시리스트 삭제 버튼
+            const deleteBtn = makeButton("삭제", () => {
+                deleteItem(item.id, item.name);
+            });
+
+            deleteBtn.className = "btn-delete";
+
+            row.querySelector(".actions").append(deleteBtn);
+
+            target.append(row);
         }
+
     } catch (error) {
         empty(target, error.message);
     }
 }
+
+async function deleteItem(id, name) {
+
+    const confirmed = confirm(
+        `${name} 상품을 위시리스트에서 삭제하시겠습니까?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+        await api(`/api/items/${id}`, {
+            method: "DELETE"
+        });
+
+        alert("상품이 삭제되었습니다.");
+
+        // 삭제 후 위시리스트 갱신
+        await loadItems();
+
+    } catch (error) {
+        alert(error.message);
+    }
+}
+
 
 // 3. 기존 예산별 추천
 $("recommendForm").addEventListener("submit", async event => {

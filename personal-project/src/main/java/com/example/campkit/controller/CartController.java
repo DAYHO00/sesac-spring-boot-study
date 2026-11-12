@@ -27,21 +27,16 @@ public class CartController {
     }
 
     @PostMapping
-    public ResponseEntity<CartItem> add(
-            @Valid @RequestBody AddCartRequest request) {
+    public ResponseEntity<CartItem> add(@Valid @RequestBody AddCartRequest request) {
 
         CartItem item = service.add(request.itemId(), request.quantity());
-
         return ResponseEntity
                 .created(URI.create("/api/cart/" + item.getId()))
                 .body(item);
     }
 
     @PatchMapping("/{id}")
-    public CartItem update(
-            @PathVariable long id,
-            @Valid @RequestBody UpdateQuantityRequest request) {
-
+    public CartItem update(@PathVariable long id, @Valid @RequestBody UpdateQuantityRequest request) {
         return service.update(id, request.quantity());
     }
 
@@ -52,8 +47,7 @@ public class CartController {
     }
 
     @GetMapping("/preview")
-    public CartPreview preview(
-            @RequestParam(defaultValue = "NONE") String couponCode) {
+    public CartPreview preview(@RequestParam(defaultValue = "NONE") String couponCode) {
 
         return service.preview(couponCode);
     }

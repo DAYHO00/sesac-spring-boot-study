@@ -94,4 +94,12 @@ public class CollectionService {
 
         return repository.save(item);
     }
+    public void delete(Long id) {
+        repository.findById(id)
+                .orElseThrow(() ->
+                        new NotFoundException("해당 장비를 찾을 수 없습니다.")
+                );
+
+        repository.delete(id);
+    }
 }

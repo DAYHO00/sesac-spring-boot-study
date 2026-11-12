@@ -10,10 +10,7 @@ public class CartItem {
     private final Integer stock;
     private final int quantity;
 
-    public CartItem(long id, long collectionItemId,
-                    String name, long unitPrice,
-                    Integer stock, int quantity) {
-
+    public CartItem(long id, long collectionItemId, String name, long unitPrice, Integer stock, int quantity) {
         if (quantity < 1 || quantity > 5) {
             throw new IllegalArgumentException("수량은 1~5개여야 합니다.");
         }
