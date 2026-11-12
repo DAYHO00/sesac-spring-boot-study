@@ -3,44 +3,57 @@ package com.example.campkit.controller;
 
 import com.example.campkit.domain.CollectionItem;
 import com.example.campkit.service.CollectionService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/items")
 public class CollectionController {
 
-    private final CollectionService collectionService;
+    private final CollectionService service;
 
-    public CollectionController(CollectionService collectionService) {
-        this.collectionService = collectionService;
+    public CollectionController(CollectionService service) {
+        this.service = service;
     }
 
-    // 1. 캠핑 장비 등록
     @PostMapping
-    public CollectionItem register(
+    public ResponseEntity<CollectionItem> register(
             @RequestParam String name,
-            @RequestParam int price) {
+            @RequestParam long price) {
 
-        return collectionService.register(name, price);
+        CollectionItem item = service.register(name, price);
+
+        return ResponseEntity
+                .created(URI.create("/api/items/" + item.getId()))
+                .body(item);
     }
 
-    // 2. 전체 캠핑 장비 조회
     @GetMapping
     public List<CollectionItem> findAll() {
-        return collectionService.findAll();
+        return service.findAll();
     }
 
-    // 3. ID로 단건 조회
     @GetMapping("/{id}")
     public CollectionItem findById(@PathVariable Long id) {
-        return collectionService.findById(id);
+        return service.findById(id);
     }
 
-    // 4. 예산별 캠핑 장비 추천
     @GetMapping("/recommend")
-    public List<CollectionItem> recommend(@RequestParam int budget) {
-        return collectionService.recommend(budget);
+    public List<CollectionItem> recommend(@RequestParam long budget) {
+        return service.recommend(budget);
+    }
+
+    @PostMapping("/import/{externalId}")
+    public ResponseEntity<CollectionItem> importExternal(
+            @PathVariable long externalId) {
+
+        CollectionItem item = service.importExternal(externalId);
+
+        return ResponseEntity
+                .created(URI.create("/api/items/" + item.getId()))
+                .body(item);
     }
 }

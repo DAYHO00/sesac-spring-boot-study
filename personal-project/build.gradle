@@ -19,6 +19,17 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+	// JDBC
+	implementation 'org.springframework.boot:spring-boot-starter-jdbc'
+
+	// MySQL
+	runtimeOnly 'com.mysql:mysql-connector-j'
+
+	// ModelMapper
+	implementation 'org.modelmapper:modelmapper:3.2.4'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
