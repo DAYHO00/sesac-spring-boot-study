@@ -51,4 +51,10 @@ public class CartController {
 
         return service.preview(couponCode);
     }
+
+    @GetMapping("/{id}")
+    public CartItem findById(@PathVariable long id) {
+        return service.findById(id);
+    }
+
 }

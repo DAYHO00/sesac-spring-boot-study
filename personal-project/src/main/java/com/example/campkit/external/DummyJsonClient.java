@@ -7,6 +7,7 @@ import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.ResourceAccessException;
 
 import java.net.http.HttpClient;
@@ -70,18 +71,33 @@ public class DummyJsonClient implements ExternalProductClient {
             T result = supplier.get();
 
             if (result == null) {
-                throw new ExternalApiException("외부 상품 응답이 비어 있습니다.");
+                throw new ExternalApiException(
+                        "외부 상품 응답이 비어 있습니다."
+                );
             }
+
             return result;
 
         } catch (RestClientResponseException e) {
             if (detail && e.getStatusCode().value() == 404) {
-                throw new NotFoundException("외부 상품을 찾을 수 없습니다.");
+                throw new NotFoundException(
+                        "외부 상품을 찾을 수 없습니다."
+                );
             }
-            throw new ExternalApiException("외부 상품 서버 응답 오류", e);
+
+            throw new ExternalApiException(
+                    "외부 상품 서버 응답 오류", e
+            );
 
         } catch (ResourceAccessException e) {
-            throw new ExternalApiException("외부 상품 서버 연결 실패", e);
+            throw new ExternalApiException(
+                    "외부 상품 서버 연결 실패", e
+            );
+
+        } catch (RestClientException e) {
+            throw new ExternalApiException(
+                    "외부 상품 응답 처리 실패", e
+            );
         }
     }
 }

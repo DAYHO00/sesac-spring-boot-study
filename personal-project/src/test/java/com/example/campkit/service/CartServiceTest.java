@@ -25,11 +25,9 @@ class CartServiceTest {
     private CollectionService collections;
     private CartService cart;
 
-    private final Map<Long, CollectionItem> collectionItems =
-            new LinkedHashMap<>();
+    private final Map<Long, CollectionItem> collectionItems = new LinkedHashMap<>();
 
-    private final Map<Long, CartItem> cartItems =
-            new LinkedHashMap<>();
+    private final Map<Long, CartItem> cartItems = new LinkedHashMap<>();
 
     @BeforeEach
     void setUp() {
@@ -133,7 +131,6 @@ class CartServiceTest {
 
         cart.add(id, 2);
         cart.add(id, 1);
-
         assertEquals(1, cart.findAll().size());
         assertEquals(3, cart.findAll().get(0).getQuantity());
     }
@@ -144,11 +141,7 @@ class CartServiceTest {
 
         cart.add(id, 3);
 
-        assertThrows(
-                ConflictException.class,
-                () -> cart.add(id, 3)
-        );
-
+        assertThrows(ConflictException.class, () -> cart.add(id, 3));
         assertEquals(3, cart.findAll().get(0).getQuantity());
     }
 
@@ -208,9 +201,7 @@ class CartServiceTest {
         long id = collections.register("텐트", 250000).getId();
 
         cart.add(id, 1);
-
-        assertEquals(20000,
-                cart.preview("PERCENT10").discount());
+        assertEquals(20000, cart.preview("PERCENT10").discount());
     }
 
     @Test

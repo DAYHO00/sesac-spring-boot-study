@@ -24,6 +24,8 @@ public class CollectionService {
         this.external = external;
     }
 
+
+
     // 기존 캠핑 장비 등록
     public CollectionItem register(String name, long price) {
         CollectionItem item = new CollectionItem(null, name, price);
