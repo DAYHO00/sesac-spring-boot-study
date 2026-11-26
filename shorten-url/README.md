@@ -47,10 +47,12 @@ KingDom은 **왕 1명, 신하 7명, 역적 2명**으로 구성된 10인 추리 �
 | Backend | Java, Spring Boot |
 | Frontend | HTML, CSS, JavaScript |
 | Database | MySQL |
-| Data Access | Spring JDBC |
+| Data Access | JPA (Hibernate) |
 | Infrastructure | Docker |
 | Build Tool | Gradle |
 | Architecture | Layered Architecture |
+
+단축 URL 저장소를 `JdbcTemplate`에서 JPA로 전환했습니다. `ShortenUrl` 엔티티는 기존 MySQL `shorten_urls` 테이블에 매핑되며, 저장소는 `EntityManager`와 JPQL을 사용합니다.
 
 ## 5. 프로젝트 구조
 
@@ -65,7 +67,7 @@ src/
     │       │   ├── ShortenUrl.java
     │       │   └── ShortenUrlRepository.java
     │       ├── infrastructure/
-    │       │   └── JdbcShortenUrlRepository.java
+    │       │   └── JpaShortenUrlRepository.java
     │       ├── presentation/
     │       │   ├── ShortenUrlCreateRequestDto.java
     │       │   ├── ShortenUrlCreateResponseDto.java
@@ -96,7 +98,7 @@ Controller (REST API)
 Service (비즈니스 로직)
        │
        ▼
-Repository (Spring JDBC)
+Repository (JPA)
        │
        ▼
 MySQL (Docker)
@@ -106,7 +108,7 @@ Spring Boot의 계층형 아키텍처를 적용하여 요청 처리, 비즈니�
 
 - **Controller:** 단축 URL 생성·조회·변경 요청 처리
 - **Service:** 단축 코드 생성, 활성 상태 확인, 목적지 변경 등 비즈니스 로직 수행
-- **Repository:** Spring JDBC를 이용한 MySQL 데이터 조회 및 수정
+- **Repository:** JPA를 이용한 단축 URL 저장·조회·수정
 - **Frontend:** 참가자 정보 및 단축 URL을 관리하는 웹 화면 제공
 
 ## 7. 데이터 저장 방식
